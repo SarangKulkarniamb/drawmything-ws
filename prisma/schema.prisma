@@ -1,0 +1,95 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String        @id @default(cuid())
+  name           String?
+  email          String?       @unique
+  emailVerified  DateTime?
+  image          String?
+
+  accounts       Account[]
+  sessions       Session[]
+  
+  roomsHosted    Room[]        @relation("RoomHost") 
+  roomPlayers    RoomPlayer[]                      
+}
+
+model Account {
+  id                 String   @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  access_token       String? 
+  token_type         String? 
+  id_token           String? 
+  scope              String? 
+  expires_at         Int?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Room {
+  id            String       @id @default(cuid())
+  hostId        String
+  host          User         @relation("RoomHost", fields: [hostId], references: [id])
+  gameState     GameState    @default(WAITING)
+  currentRound  Int          @default(0)
+  createdAt     DateTime     @default(now())
+  
+  players       RoomPlayer[]
+  turns         GameTurn[]
+}
+
+model RoomPlayer {
+  id        String   @id @default(uuid())
+  userId    String
+  roomId    String
+  joinedAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  room      Room     @relation(fields: [roomId], references: [id])
+
+  @@unique([userId, roomId])
+}
+
+model GameTurn {
+  id        String        @id @default(uuid())
+  roomId    String
+  room      Room          @relation(fields: [roomId], references: [id])
+  fromId    String
+  toId      String
+  type      GameTurnType
+  content   String
+  createdAt DateTime      @default(now())
+}
+
+enum GameTurnType {
+  PROMPT
+  DRAWING
+  GUESS
+}
+
+enum GameState {
+  WAITING
+  IN_PROGRESS
+  FINISHED
+}
