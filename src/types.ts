@@ -1,5 +1,7 @@
 import type { WebSocket } from 'ws';
 
+export type GamePhase = "waiting" | "prompt" | "guess" | "draw" | "finished";
+
 export type Player = {
   id: string;
   name: string;
@@ -8,19 +10,26 @@ export type Player = {
 };
 
 export type GameTurn = {
-  type: "prompt" | "drawing" | "guess";
-  from: string;              // userId
-  to: string;                
-  content: string;           // output (guess or drawing)
+  type: "waiting" | "prompt" | "guess" | "draw" | "finished";
+  from: string;
+  to: string;
+  content: string;
+};
+
+export type RoundData = {
+  type: "waiting" | "prompt" | "guess" | "draw" | "finished";
+  content: string;
+  playerId: string;
 };
 
 export type Room = {
   id: string;
   players: Player[];
   hostId: string;
-  gameState: "waiting" | "in-progress" | "finished";
+  gameState: GamePhase;
   currentRound: number;
-  turns: GameTurn[];         // full game history
-  roundData: Map<string, any>; // current round state per player
+  turns: GameTurn[];
+  roundData: Map<string, RoundData>;
+  passMap?: Map<string, string>;
   createdAt: Date;
 };
