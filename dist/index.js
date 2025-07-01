@@ -90,6 +90,24 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
                     ws.send(JSON.stringify({ type: 'left_room', data: { roomId } }));
                     break;
                 }
+                case 'chat_message': {
+                    const { roomId, message } = data;
+                    const room = rooms.get(roomId);
+                    if (!room)
+                        return;
+                    console.log(`🗨️ ${player.name} (${player.id}) in room ${roomId}: ${message}`);
+                    const chatPayload = {
+                        type: 'chat',
+                        data: {
+                            playerId: player.id,
+                            playerName: player.name,
+                            playerAvatar: player.avatar,
+                            message
+                        }
+                    };
+                    broadcastToRoom(room, chatPayload);
+                    break;
+                }
                 case 'start_game': {
                     const roomId = data.roomId;
                     const room = rooms.get(roomId);
@@ -125,7 +143,6 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
                         content,
                         playerId: player.id
                     });
-                    // Wait for all submissions
                     if (room.roundData.size === room.players.length) {
                         for (const [fromId, roundEntry] of room.roundData.entries()) {
                             const toId = room.passMap.get(fromId);
@@ -136,7 +153,6 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
                                 content: roundEntry.content
                             };
                             room.turns.push(turn);
-                            // Send this turn to the correct player privately
                             const target = room.players.find(p => p.id === toId);
                             if ((target === null || target === void 0 ? void 0 : target.socket.readyState) === 1) {
                                 target.socket.send(JSON.stringify({
@@ -145,7 +161,6 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
                                 }));
                             }
                         }
-                        // Prepare for next phase
                         room.roundData.clear();
                         room.currentRound += 1;
                         const nextPhase = room.gameState === 'prompt' ? 'draw'

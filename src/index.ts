@@ -88,7 +88,25 @@ wss.on('connection', async (ws, req) => {
           ws.send(JSON.stringify({ type: 'left_room', data: { roomId } }));
           break;
         }
+        
+        case 'chat_message': {
+          const { roomId, message } = data;
+          const room = rooms.get(roomId);
+          if (!room) return;
+          console.log(`🗨️ ${player.name} (${player.id}) in room ${roomId}: ${message}`);
+          const chatPayload = {
+            type: 'chat',
+            data: {
+              playerId: player.id,
+              playerName: player.name,
+              playerAvatar: player.avatar,
+              message
+            }
+          };
 
+          broadcastToRoom(room, chatPayload);
+          break;
+        }
         case 'start_game': {
           const roomId = data.roomId;
           const room = rooms.get(roomId);
