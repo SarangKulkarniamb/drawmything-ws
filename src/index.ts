@@ -139,7 +139,6 @@ wss.on('connection', async (ws, req) => {
           if (!playerInRoom) {
             return ws.send(JSON.stringify({ type: 'error', data: { msg: 'Player not in this room' } }));
           }
-
           
           room.roundData.set(player.id, {
             type: room.gameState,
@@ -164,8 +163,9 @@ wss.on('connection', async (ws, req) => {
               if (target?.socket.readyState === 1) {
                 target.socket.send(JSON.stringify({
                   type: 'game_content',
-                  data: { ...turn }
+                  data: {type: room.gameState, content: roundEntry.content}
                 }));
+                console.log(roundEntry.content, "content");
               }
             }
 
@@ -192,7 +192,6 @@ wss.on('connection', async (ws, req) => {
               });
             }
 
-            console.log("🌀 Current Room State:\n", JSON.stringify(room, null, 2));
           }
 
           break;
@@ -215,7 +214,6 @@ wss.on('connection', async (ws, req) => {
   });
 });
 
-// Helper Functions
 function broadcastPlayerList(room: LiveRoom) {
   const playerList = room.players.map(p => ({
     id: p.id,

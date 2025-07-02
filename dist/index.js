@@ -157,8 +157,9 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
                             if ((target === null || target === void 0 ? void 0 : target.socket.readyState) === 1) {
                                 target.socket.send(JSON.stringify({
                                     type: 'game_content',
-                                    data: Object.assign({}, turn)
+                                    data: { type: room.gameState, content: roundEntry.content }
                                 }));
+                                console.log(roundEntry.content, "content");
                             }
                         }
                         room.roundData.clear();
@@ -181,7 +182,6 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
                                 data: { phase: nextPhase, round: room.currentRound }
                             });
                         }
-                        console.log("🌀 Current Room State:\n", JSON.stringify(room, null, 2));
                     }
                     break;
                 }
@@ -201,7 +201,6 @@ wss.on('connection', (ws, req) => __awaiter(void 0, void 0, void 0, function* ()
         }
     });
 }));
-// Helper Functions
 function broadcastPlayerList(room) {
     const playerList = room.players.map(p => ({
         id: p.id,
